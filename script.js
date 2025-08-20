@@ -3,9 +3,9 @@
 const CONFIG = {
   // EmailJS
   emailjs: {
-    publicKey: "VOTRE_CLE_PUBLIQUE",
-    serviceId: "VOTRE_SERVICE_ID",
-    templateId: "VOTRE_TEMPLATE_ID"
+    publicKey: "DEMO_PUBLIC_KEY_REPLACE_ME",
+    serviceId: "DEMO_SERVICE_ID",
+    templateId: "DEMO_TEMPLATE_ID"
   },
 
   // Contacts
@@ -37,11 +37,11 @@ const CONFIG = {
     primary: ["BTC", "ETH", "USDT", "LTC", "BCH"],
     secondary: ["USDC", "BUSD", "ADA", "SOL", "XRP"],
     addresses: {
-      BTC: "bc1q...", 
-      ETH: "0x...",
-      USDT: "T...",
-      LTC: "ltc1q...",
-      BCH: "qq..."
+      BTC: "bc1qexemplebtcaddress12345", 
+      ETH: "0xExempleEthAddress123456789",
+      USDT: "TExempleUsdtAddress123456789",
+      LTC: "ltc1qexempleltcaddress123456",
+      BCH: "qqexemplebchaddress123456789"
     },
     rates: {
       BTC: 150000000,
@@ -115,7 +115,16 @@ function initUI() {
 
   // Boutons d'action
   $("#dep-copy").addEventListener("click", () => copyToClipboard($("#dep-addr").value));
-  $("#toggleCryptos").addEventListener("click", toggleCryptoList);
+  $("#toggleMoreCryptos").addEventListener("click", toggleCryptoList);
+  
+  // Options de paiement
+  $$("#dep-pay-opts .paybtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.payment.method = btn.dataset.pay;
+      updatePaymentSelection();
+      refreshUI();
+    });
+  });
 }
 
 function updateActiveTab() {
@@ -125,6 +134,14 @@ function updateActiveTab() {
   $$("[role=tabpanel]").forEach(panel => {
     panel.hidden = panel.id !== `panel-${state.currentTab}`;
   });
+}
+
+function setLanguage(lang) {
+  state.lang = lang;
+  $("#lang-fr").classList.toggle("lang-active", lang === "fr");
+  $("#lang-mg").classList.toggle("lang-active", lang === "mg");
+  // Ici vous pourriez ajouter des traductions dynamiques
+  showToast(`Langue changée: ${lang === "fr" ? "Français" : "Malagasy"}`);
 }
 
 /*** 5. GESTION DES CRYPTO ***/
@@ -147,29 +164,79 @@ async function fetchCryptoRates() {
 function toggleCryptoList() {
   state.crypto.showAll = !state.crypto.showAll;
   renderCryptoOptions();
-  $("#toggleCryptos").innerHTML = state.crypto.showAll 
-    ? "<svg>...</svg> Réduire" 
-    : "<svg>...</svg> Plus de cryptos";
+  $("#toggleMoreCryptos").innerHTML = state.crypto.showAll 
+    ? "<svg viewBox='0 0 24 24' fill='none'><path d='M5 12h14' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg> Réduire" 
+    : "<svg viewBox='0 0 24 24' fill='none'><path d='M12 5v14M5 12h14' stroke='currentColor' stroke-width='2' stroke-linecap='round'/></svg> Plus de cryptos";
+}
+
+function renderCryptoOptions() {
+  const cryptos = state.crypto.showAll 
+    ? [...CONFIG.cryptos.primary, ...CONFIG.cryptos.secondary]
+    : CONFIG.cryptos.primary;
+
+  $("#cryptoStrip").innerHTML = cryptos.map(crypto => `
+    <button class="chip" aria-pressed="${crypto === state.crypto.selected}"
+            onclick="state.crypto.selected='${crypto}'; refreshUI()">
+      ${crypto}
+    </button>
+  `).join("");
+}
+
+function updateRateDisplay() {
+  const rate = CONFIG.cryptos.rates[state.crypto.selected];
+  if (rate) {
+    $("#current-rate-display").textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+  }
 }
 
 /*** 6. OPÉRATIONS PRINCIPALES ***/
 function refreshDepot() {
   const amount = parseFloat($("#dep-amount-ariary").value) || 0;
   const rate = CONFIG.cryptos.rates[state.crypto.selected];
-  const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(8);
-  
-  $("#dep-amount-crypto").value = received;
-  $("#dep-crypto-suffix").textContent = state.crypto.selected;
-  updatePaymentDetails();
+  if (rate && amount > 0) {
+    const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(8);
+    $("#dep-amount-crypto").value = received;
+    $("#dep-crypto-suffix").textContent = state.crypto.selected;
+    $("#dep-rate-note").textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+    updatePaymentDetails();
+  }
 }
 
 function refreshRetrait() {
   const amount = parseFloat($("#ret-amount-crypto").value) || 0;
   const rate = CONFIG.cryptos.rates[state.crypto.selected];
-  const received = Math.floor(amount * rate * (1 - CONFIG.fees.retrait));
-  
-  $("#ret-amount-ariary").value = received.toLocaleString();
-  $("#ret-our-addr").value = CONFIG.cryptos.addresses[state.crypto.selected] || "";
+  if (rate && amount > 0) {
+    const received = Math.floor(amount * rate * (1 - CONFIG.fees.retrait));
+    $("#ret-amount-ariary").value = received.toLocaleString();
+    $("#ret-our-addr").value = CONFIG.cryptos.addresses[state.crypto.selected] || "";
+    $("#ret-rate-note").textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+  }
+}
+
+function refreshTransfer() {
+  const amount = parseFloat($("#trf-amount-top").value) || 0;
+  const rate = CONFIG.cryptos.rates[state.crypto.selected] / CONFIG.cryptos.rates[state.payment.target];
+  if (rate && amount > 0) {
+    const received = (amount * rate * (1 - CONFIG.fees.transfert)).toFixed(8);
+    $("#trf-amount-bot").value = received;
+    $("#trf-rate-note").textContent = `1 ${state.crypto.selected} = ${rate.toFixed(4)} ${state.payment.target}`;
+  }
+}
+
+function updatePaymentDetails() {
+  const wallet = CONFIG.wallets.mobile[state.payment.method] || CONFIG.wallets.ewallets[state.payment.method];
+  if (wallet) {
+    $("#dep-pay-dest").textContent = wallet.num || wallet.addr || "";
+    $("#dep-pay-name").textContent = wallet.name || "TakaloCash";
+    $("#dep-pay-logo").textContent = wallet.logo;
+    $("#dep-addr").value = wallet.num || wallet.addr || "";
+  }
+}
+
+function updatePaymentSelection() {
+  $$("#dep-pay-opts .paybtn").forEach(btn => {
+    btn.setAttribute("aria-pressed", btn.dataset.pay === state.payment.method);
+  });
 }
 
 /*** 7. VALIDATION & ENVOI ***/
@@ -184,7 +251,13 @@ function validateForm() {
     retrait: [
       $("#ret-amount-crypto").value,
       $("#ret-phone").value,
+      $("#ret-name").value,
       $("#ret-accept").checked
+    ],
+    transfert: [
+      $("#trf-amount-top").value,
+      $("#trf-dest-addr").value,
+      $("#trf-accept").checked
     ]
   };
   
@@ -193,26 +266,69 @@ function validateForm() {
 
 async function submitForm() {
   if (!validateForm()) {
-    showToast("Vérifiez tous les champs requis");
+    showToast("Vérifiez tous les champs requis et acceptez les conditions");
     return;
   }
 
   const formData = {
     service: state.currentTab.toUpperCase(),
     crypto: state.crypto.selected,
-    amount: $(`#${state.currentTab}-amount`).value,
-    date: new Date().toISOString()
+    amount: $(`#${state.currentTab}-amount-${state.currentTab === "depot" ? "ariary" : "crypto"}`).value,
+    date: new Date().toLocaleString(state.lang),
+    method: state.payment.method
   };
 
   await sendData(formData);
 }
 
-/*** 8. INITIALISATION ***/
+async function sendData(data) {
+  // Mode démo si les clés ne sont pas configurées
+  if (CONFIG.emailjs.publicKey.includes("DEMO")) {
+    console.log("DEMO Submission:", data);
+    showToast("DEMO: Demande enregistrée (simulation)");
+    return;
+  }
+
+  try {
+    await emailjs.send(
+      CONFIG.emailjs.serviceId,
+      CONFIG.emailjs.templateId,
+      data,
+      CONFIG.emailjs.publicKey
+    );
+    showToast("Demande envoyée! Vérifiez votre email.", 5000);
+  } catch (error) {
+    console.error("EmailJS Error:", error);
+    showToast("Erreur d'envoi. Réessayez ou contactez-nous.");
+  }
+}
+
+/*** 8. RAFRAÎCHISSEMENT GLOBAL ***/
+function refreshUI() {
+  updateRateDisplay();
+  renderCryptoOptions();
+  updatePaymentDetails();
+  updatePaymentSelection();
+  
+  // Met à jour seulement le panneau actif
+  if (state.currentTab === "depot") refreshDepot();
+  if (state.currentTab === "retrait") refreshRetrait();
+  if (state.currentTab === "transfert") refreshTransfer();
+}
+
+/*** 9. INITIALISATION ***/
 function init() {
   initUI();
   fetchCryptoRates();
   setInterval(fetchCryptoRates, 60000); // Actualisation toutes les minutes
   refreshUI();
+  
+  // Initialisation EmailJS
+  if (emailjs) {
+    emailjs.init({
+      publicKey: CONFIG.emailjs.publicKey
+    });
+  }
 }
 
 // Lancement
