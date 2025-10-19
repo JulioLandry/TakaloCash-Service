@@ -17,7 +17,22 @@
                 </a>
             </div>
             <div class="flags" aria-label="Language">
-                <!-- Flags ici -->
+                <!-- FR -->
+                <button class="flag lang-active" id="lang-fr" aria-pressed="true" title="Français">
+                    <svg viewBox="0 0 3 2" width="28" height="18">
+                        <rect width="1" height="2" x="0" y="0" fill="#0055a4"/>
+                        <rect width="1" height="2" x="1" y="0" fill="#fff"/>
+                        <rect width="1" height="2" x="2" y="0" fill="#ef4135"/>
+                    </svg>
+                </button>
+                <!-- MG -->
+                <button class="flag" id="lang-mg" aria-pressed="false" title="Malagasy">
+                    <svg viewBox="0 0 3 2" width="28" height="18">
+                        <rect width="1" height="2" x="0" y="0" fill="#ffffff"/>
+                        <rect width="2" height="1" x="1" y="0" fill="#fc3d32"/>
+                        <rect width="2" height="1" x="1" y="1" fill="#007e3a"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -29,35 +44,58 @@
     </header>
 
     <main>
-        <!-- Contenu spécifique au Dépôt -->
+        <!-- Crypto rates display -->
         <div class="panel" id="rates-panel">
             <div class="row" style="justify-content: space-between; flex-wrap: wrap; align-items: center;">
                 <div><b>Cours actuels:</b></div>
                 <div class="crypto-selector" id="crypto-selector">
-                    <!-- Crypto selector -->
+                    <div class="crypto-selector-btn" id="crypto-selector-btn">
+                        <span id="current-rate-display">Chargement...</span>
+                        <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="crypto-dropdown" id="crypto-dropdown"></div>
                 </div>
             </div>
         </div>
 
-        <div class="crypto-strip" id="cryptoStrip"></div>
-        <div class="ewallet-strip" id="ewalletStrip"></div>
-
-        <section class="panel" id="panel-depot">
-            <!-- Formulaire Dépôt -->
-            <div class="row">
-                <button class="expand-btn" id="toggleMoreCryptos">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Plus de cryptos
-                </button>
+        <!-- Type de réception -->
+        <div class="panel">
+            <div class="label">Choisir le type de réception:</div>
+            <div class="pay-opts" id="dep-reception-type">
+                <button class="paybtn" data-type="crypto" aria-pressed="true">Crypto</button>
+                <button class="paybtn" data-type="wallet" aria-pressed="false">E-Wallet</button>
             </div>
+        </div>
 
+        <!-- STRIPS (crypto et e-wallet) -->
+        <div class="section-group">
+            <div class="section">
+                <div class="crypto-strip" id="cryptoStrip"></div>
+                <!-- Bouton Plus de cryptos -->
+                <div class="row" style="justify-content: flex-start; margin: 8px 0;">
+                    <button class="expand-btn" id="toggleMoreCryptos">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        Plus de cryptos
+                    </button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="ewallet-strip" id="ewalletStrip"></div>
+            </div>
+        </div>
+
+        <!-- ================== DEPOT ================== -->
+        <section class="panel" id="panel-depot">
             <div class="grid" style="margin-top:10px">
+                <!-- ENVOIE (Montant + Paiement) -->
                 <div>
                     <div class="label">Envoie</div>
                     <div class="field">
                         <input id="dep-amount-ariary" type="number" inputmode="decimal" placeholder="montant en ariary" />
                         <span class="prefix">MGA</span>
-                        <span class="suffix" id="dep-pay-logo">Mvola</span>
                     </div>
 
                     <div class="note">Choisir le moyen de paiement:</div>
@@ -72,45 +110,566 @@
                     </div>
                 </div>
 
+                <!-- REÇU (Crypto ou Wallet amount) -->
                 <div>
                     <div class="label">Reçu</div>
                     <div class="field">
-                        <input id="dep-amount-crypto" type="text" placeholder="0.00000000" readonly />
-                        <span class="suffix" id="dep-crypto-suffix">BTC</span>
+                        <input id="dep-amount-received" type="text" placeholder="0.00000000" readonly />
+                        <span class="suffix" id="dep-received-suffix">BTC</span>
                     </div>
                     <div class="note muted">
                         <div id="dep-rate-note">1 BTC = … MGA</div>
                         <div id="dep-fee-note">Frais: 0,3%</div>
                     </div>
 
-                    <div class="label" id="dep-addr-label">Adresse de paiement</div>
-                    <div class="row">
-                        <div class="field" style="flex:1">
-                            <input id="dep-addr" type="text" readonly value="" />
-                        </div>
-                        <button class="copybtn" id="dep-copy">Copier</button>
+                    <!-- Adresse modifiable par l'utilisateur -->
+                    <div class="label" id="dep-addr-label">Adresse de réception</div>
+                    <div class="field">
+                        <input id="dep-addr" type="text" placeholder="Votre adresse de réception" />
                     </div>
+                    <div class="note muted" id="dep-addr-note">Entrez votre adresse de wallet pour recevoir</div>
                 </div>
             </div>
 
-            <div class="label" style="margin-top:6px">Nom dans le compte</div>
-            <div class="field"><input id="dep-holder" type="text" placeholder="Ex: Rakoto" /></div>
-
             <label class="checkbox">
                 <input id="dep-accept" type="checkbox" />
-                <span class="muted">Je certifie avoir lu et pris connaissance des conditions générales.</span>
+                <span class="muted">Je certifie avoir lu et pris connaissance des conditions générales d'utilisation du site internet et les accepter sans réserve.</span>
             </label>
             <div class="actions">
                 <button id="dep-preview" class="btn btn-primary" disabled>Aperçu</button>
+                <span class="muted" id="dep-msg"></span>
             </div>
         </section>
     </main>
 
     <footer>
-        <!-- Footer commun -->
+        <div class="footer-wrap">
+            <div class="contact-title">Contact</div>
+            <div class="cta">
+                <div class="ctaitem" data-kind="email" id="cta-email" title="Email">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2"/></svg>
+                    Email
+                </div>
+                <div class="ctaitem" data-kind="call" id="cta-call" title="Téléphone">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v2a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 3.9 2 2 0 0 1 4.11 2h2a2 2 0 0 1 2 1.72c.12.9.3 1.78.57 2.63a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.45-1.14a2 2 0 0 1 2.11-.45c.85.27 1.73.45 2.63.57A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="2"/></svg>
+                    Téléphone
+                </div>
+                <div class="ctaitem" data-kind="fb" id="cta-fb" title="Facebook">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-8h3l1-4h-4V7c0-1.1.9-2 2-2h2V1h-3a5 5 0 0 0-5 5v4H6v4h3v8h4z"/></svg>
+                    Facebook
+                </div>
+                <div class="ctaitem" data-kind="wa" id="cta-wa" title="WhatsApp">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4.9A9.8 9.8 0 0 0 12.2 2C6.9 2 2.6 6.3 2.6 11.6c0 2 .6 3.9 1.8 5.5L3 22l4.9-1.3c1.5.8 3.2 1.2 4.9 1.2 5.3 0 9.6-4.3 9.6-9.6 0-2.6-1-5-2.7-6.8zM12.8 20c-1.5 0-2.9-.4-4.2-1.1l-.3-.2-2.9.8.8-2.8-.2-.3c-1-1.3-1.6-2.9-1.6-4.6C4.4 7.7 8 4.1 12.2 4.1c2.1 0 4.1.8 5.6 2.3 1.5 1.5 2.3 3.5 2.3 5.6 0 4.2-3.6 7.9-7.3 8z"/><path d="M16.6 13.7c-.2-.1-1.3-.7-1.5-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.1-.3.2-.5.1-.2-.1-.9-.3-1.7-1-.6-.6-1-1.2-1.1-1.4-.1-.2 0-.4.1-.5.1-.1.2-.3.3-.5.1-.1.1-.2.2-.4.1-.2 0-.3 0-.4s-.5-1.1-.7-1.5c-.2-.4-.4-.3-.5-.3h-.4c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3.9 2.5c.1.2 1.6 2.6 3.8 3.6.5.2.9.4 1.2.5.5.2 1 .2 1.3.1.4-.1 1.3-.5 1.5-1 .2-.5.2-.9.1-1-.1-.1-.2-.1-.4-.2z"/></svg>
+                    WhatsApp
+                </div>
+            </div>
+
+            <div class="legal">
+                <a data-modal="cgu">Conditions générales d'utilisation</a>
+                <a data-modal="mentions">Mentions légales</a>
+                <a data-modal="privacy">Politique de confidentialité</a>
+            </div>
+
+            <div class="copy">© 2025 TakaloCash. Tous droits réservés.</div>
+        </div>
     </footer>
 
+    <!-- LEGAL MODALS -->
+    <dialog id="dlg-cgu"><h3>Conditions générales</h3><p>Exemple de conditions… (soloina amin'ny tena pejy-nao).</p><div style="text-align:right;margin-top:10px"><button onclick="this.closest('dialog').close()">OK</button></div></dialog>
+    <dialog id="dlg-mentions"><h3>Mentions légales</h3><p>Exemple de mentions…</p><div style="text-align:right;margin-top:10px"><button onclick="this.closest('dialog').close()">OK</button></div></dialog>
+    <dialog id="dlg-privacy"><h3>Politique de confidentialité</h3><p>Exemple de politique…</p><div style="text-align:right;margin-top:10px"><button onclick="this.closest('dialog').close()">OK</button></div></dialog>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- EmailJS SDK (front-end) -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+        /* ===== TAKALOCASH - SCRIPT COMPLET PAGE DÉPÔT ===== */
+
+        /*** 1. CONFIGURATION ***/
+        const CONFIG = {
+            // EmailJS (à remplacer avec vos vraies clés)
+            emailjs: {
+                publicKey: "DEMO_PUBLIC_KEY_REPLACE_ME",
+                serviceId: "DEMO_SERVICE_ID",
+                templateId: "DEMO_TEMPLATE_ID"
+            },
+
+            // Contacts
+            contact: {
+                email: "contact@takalocash.mg",
+                phone: "+261347451051",
+                social: {
+                    facebook: "https://facebook.com/takalocash",
+                    whatsapp: "https://wa.me/261347451051"
+                }
+            },
+
+            // Portefeuilles
+            wallets: {
+                mobile: {
+                    mvola: { num: "0347451051", name: "Julio Landry", logo: "Mvola" },
+                    orange: { num: "0324923117", name: "Julio Landry", logo: "Orange" },
+                    airtel: { num: "0331483290", name: "Julio R.", logo: "Airtel" }
+                },
+                ewallets: {
+                    wise: { addr: "WISE-ACCOUNT-ID", logo: "€", currency: "EUR" },
+                    paypal: { addr: "paypal@takalocash.mg", logo: "$", currency: "USD" },
+                    skrill: { addr: "skrill@takalocash.mg", logo: "€", currency: "EUR" },
+                    payoneer: { addr: "PAYONEER-ID", logo: "$", currency: "USD" }
+                }
+            },
+
+            // Cryptomonnaies
+            cryptos: {
+                primary: ["BTC", "ETH", "USDT", "LTC", "BCH"],
+                secondary: ["USDC", "BUSD", "ADA", "SOL", "XRP", "DOT", "LINK"],
+                addresses: {
+                    BTC: "bc1qexemplebtcaddress12345", 
+                    ETH: "0xExempleEthAddress123456789",
+                    USDT: "TExempleUsdtAddress123456789",
+                    LTC: "ltc1qexempleltcaddress123456",
+                    BCH: "qqexemplebchaddress123456789",
+                    USDC: "0xExempleUsdcAddress123456789",
+                    ADA: "addr1exempleadaaddress123456"
+                },
+                rates: {
+                    BTC: 150000000,
+                    ETH: 9000000,
+                    USDT: 4500,
+                    LTC: 350000,
+                    BCH: 2800000,
+                    USDC: 4500,
+                    ADA: 1200
+                }
+            },
+
+            // Taux de change pour les devises
+            currencyRates: {
+                EUR: 5000,  // 1 EUR = 5000 MGA
+                USD: 4500   // 1 USD = 4500 MGA
+            },
+
+            // Frais
+            fees: {
+                depot: 0.003    // 0.3%
+            }
+        };
+
+        /*** 2. ÉTAT GLOBAL ***/
+        const state = {
+            lang: "fr",
+            currentPage: "depot",
+            crypto: {
+                selected: "BTC",
+                showAll: false
+            },
+            payment: {
+                method: "mvola",
+                target: "wise"
+            },
+            receptionType: "crypto" // 'crypto' ou 'wallet'
+        };
+
+        /*** 3. FONCTIONS UTILITAIRES ***/
+        // Sélecteurs DOM
+        const $ = (selector, parent = document) => parent.querySelector(selector);
+        const $$ = (selector, parent = document) => parent.querySelectorAll(selector);
+
+        // Affichage des notifications
+        function showToast(message, duration = 3000) {
+            const toast = $("#toast");
+            if (!toast) return;
+            
+            toast.textContent = message;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), duration);
+        }
+
+        // Copie dans le presse-papier
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast("Copié !");
+            } catch (error) {
+                console.error("Erreur copie:", error);
+                // Fallback pour les navigateurs plus anciens
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                showToast("Copié !");
+            }
+        }
+
+        /*** 4. FONCTIONS COMMUNES ***/
+        function initCommon() {
+            // Initialisation EmailJS
+            if (typeof emailjs !== 'undefined' && !CONFIG.emailjs.publicKey.includes("DEMO")) {
+                emailjs.init({
+                    publicKey: CONFIG.emailjs.publicKey
+                });
+            }
+
+            // Gestion de la langue
+            $("#lang-fr")?.addEventListener("click", () => setLanguage("fr"));
+            $("#lang-mg")?.addEventListener("click", () => setLanguage("mg"));
+
+            // Contact footer
+            $("#cta-email")?.addEventListener("click", () => window.location.href = `mailto:${CONFIG.contact.email}`);
+            $("#cta-call")?.addEventListener("click", () => window.location.href = `tel:${CONFIG.contact.phone}`);
+            $("#cta-fb")?.addEventListener("click", () => window.open(CONFIG.contact.social.facebook, "_blank"));
+            $("#cta-wa")?.addEventListener("click", () => window.open(CONFIG.contact.social.whatsapp, "_blank"));
+
+            // Modales légales
+            $$("[data-modal]").forEach(el => {
+                el.addEventListener("click", () => {
+                    const modalId = `dlg-${el.dataset.modal}`;
+                    const modal = $(`#${modalId}`);
+                    if (modal) modal.showModal();
+                });
+            });
+
+            // Fermeture des modales
+            $$("dialog").forEach(dialog => {
+                dialog.addEventListener("click", (e) => {
+                    if (e.target === dialog) {
+                        dialog.close();
+                    }
+                });
+            });
+        }
+
+        function setLanguage(lang) {
+            state.lang = lang;
+            $("#lang-fr")?.classList.toggle("lang-active", lang === "fr");
+            $("#lang-mg")?.classList.toggle("lang-active", lang === "mg");
+            showToast(`Langue changée: ${lang === "fr" ? "Français" : "Malagasy"}`);
+        }
+
+        /*** 5. GESTION DES CRYPTO & TAUX ***/
+        async function fetchCryptoRates() {
+            try {
+                const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd");
+                const data = await response.json();
+                
+                // Mise à jour des taux (1 USD = 4500 MGA)
+                if (data.bitcoin) CONFIG.cryptos.rates.BTC = Math.round(data.bitcoin.usd * 4500);
+                if (data.ethereum) CONFIG.cryptos.rates.ETH = Math.round(data.ethereum.usd * 4500);
+                if (data.tether) CONFIG.cryptos.rates.USDT = Math.round(data.tether.usd * 4500);
+                
+                updateRateDisplay();
+                updateCryptoDropdown();
+            } catch (error) {
+                console.error("Erreur API:", error);
+                showToast("Taux non actualisés (mode hors-ligne)");
+            }
+        }
+
+        function updateRateDisplay() {
+            const rateDisplay = $("#current-rate-display");
+            if (rateDisplay && state.crypto.selected && CONFIG.cryptos.rates[state.crypto.selected]) {
+                const rate = CONFIG.cryptos.rates[state.crypto.selected];
+                rateDisplay.textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+            }
+        }
+
+        function setupCryptoSelector() {
+            const selectorBtn = $("#crypto-selector-btn");
+            const dropdown = $("#crypto-dropdown");
+            
+            if (!selectorBtn || !dropdown) return;
+            
+            selectorBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                selectorBtn.classList.toggle("open");
+                dropdown.classList.toggle("open");
+            });
+            
+            // Fermer le dropdown en cliquant ailleurs
+            document.addEventListener("click", (e) => {
+                if (!selectorBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                    selectorBtn.classList.remove("open");
+                    dropdown.classList.remove("open");
+                }
+            });
+        }
+
+        function updateCryptoDropdown() {
+            const dropdown = $("#crypto-dropdown");
+            if (!dropdown) return;
+            
+            dropdown.innerHTML = "";
+            
+            const allCryptos = [...CONFIG.cryptos.primary, ...CONFIG.cryptos.secondary];
+            allCryptos.forEach(sym => {
+                const item = document.createElement("div");
+                item.className = "crypto-item";
+                if (sym === state.crypto.selected) item.classList.add("active");
+                
+                item.innerHTML = `
+                    <span>${sym}</span>
+                    <span class="crypto-rate">${CONFIG.cryptos.rates[sym]?.toLocaleString() || '...'} MGA</span>
+                `;
+                
+                item.addEventListener("click", () => {
+                    state.crypto.selected = sym;
+                    $("#crypto-selector-btn").classList.remove("open");
+                    dropdown.classList.remove("open");
+                    refreshDepot();
+                });
+                
+                dropdown.appendChild(item);
+            });
+        }
+
+        /*** 6. FONCTIONS SPÉCIFIQUES DÉPÔT ***/
+        function initDepotPage() {
+            // Type de réception
+            $$("#dep-reception-type .paybtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    state.receptionType = btn.dataset.type;
+                    updateReceptionTypeSelection();
+                    refreshDepot();
+                    updateAddressField();
+                });
+            });
+
+            // Options de paiement mobile
+            $$("#dep-pay-opts .paybtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    state.payment.method = btn.dataset.pay;
+                    updatePaymentSelection();
+                    updatePaymentDetails();
+                    refreshDepot();
+                });
+            });
+
+            // Événements de saisie
+            $("#dep-amount-ariary")?.addEventListener("input", refreshDepot);
+            $("#toggleMoreCryptos")?.addEventListener("click", toggleCryptoList);
+            
+            // Validation
+            $("#dep-accept")?.addEventListener("change", () => {
+                const btn = $("#dep-preview");
+                if (btn) btn.disabled = !$("#dep-accept").checked;
+            });
+            
+            // Soumission
+            $("#dep-preview")?.addEventListener("click", submitDepot);
+
+            // Initialisation
+            updateReceptionTypeSelection();
+            updatePaymentDetails();
+            updateAddressField();
+            renderCryptoOptions();
+            renderEwalletOptions();
+            refreshDepot();
+        }
+
+        // Nouvelle fonction pour mettre à jour la sélection du type de réception
+        function updateReceptionTypeSelection() {
+            $$("#dep-reception-type .paybtn").forEach(btn => {
+                btn.setAttribute("aria-pressed", btn.dataset.type === state.receptionType);
+            });
+        }
+
+        // Nouvelle fonction pour mettre à jour le champ d'adresse selon le type
+        function updateAddressField() {
+            const addrLabel = $("#dep-addr-label");
+            const addrInput = $("#dep-addr");
+            const addrNote = $("#dep-addr-note");
+            
+            if (state.receptionType === "crypto") {
+                addrLabel.textContent = "Adresse crypto";
+                addrInput.placeholder = "Votre adresse crypto (BTC, ETH, etc.)";
+                addrNote.textContent = "Entrez votre adresse de wallet crypto pour recevoir";
+            } else {
+                addrLabel.textContent = "Adresse e-wallet";
+                addrInput.placeholder = "Votre email ou identifiant e-wallet";
+                addrNote.textContent = "Entrez votre email ou identifiant e-wallet";
+            }
+        }
+
+        // Modifier refreshDepot() pour gérer les deux types
+        function refreshDepot() {
+            const amount = parseFloat($("#dep-amount-ariary")?.value) || 0;
+            
+            if (amount > 0) {
+                if (state.receptionType === "crypto") {
+                    // Conversion vers crypto
+                    const rate = CONFIG.cryptos.rates[state.crypto.selected];
+                    if (rate) {
+                        const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(8);
+                        $("#dep-amount-received").value = received;
+                        $("#dep-received-suffix").textContent = state.crypto.selected;
+                        $("#dep-rate-note").textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+                    }
+                } else {
+                    // Conversion vers devise (e-wallet)
+                    const selectedWallet = CONFIG.wallets.ewallets[state.payment.target];
+                    if (selectedWallet && CONFIG.currencyRates[selectedWallet.currency]) {
+                        const rate = CONFIG.currencyRates[selectedWallet.currency];
+                        const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(2);
+                        $("#dep-amount-received").value = received;
+                        $("#dep-received-suffix").textContent = selectedWallet.currency;
+                        $("#dep-rate-note").textContent = `1 ${selectedWallet.currency} = ${rate.toLocaleString()} MGA`;
+                    }
+                }
+                
+                $("#dep-fee-note").textContent = `Frais: ${(CONFIG.fees.depot * 100).toFixed(1)}%`;
+            } else {
+                $("#dep-amount-received").value = "";
+            }
+        }
+
+        function updatePaymentDetails() {
+            const wallet = CONFIG.wallets.mobile[state.payment.method];
+            if (wallet) {
+                $("#dep-pay-dest").textContent = wallet.num || "";
+                $("#dep-pay-name").textContent = wallet.name || "TakaloCash";
+            }
+        }
+
+        function updatePaymentSelection() {
+            $$("#dep-pay-opts .paybtn").forEach(btn => {
+                btn.setAttribute("aria-pressed", btn.dataset.pay === state.payment.method);
+            });
+        }
+
+        /*** 7. FONCTIONS DE RENDU ***/
+        function toggleCryptoList() {
+            state.crypto.showAll = !state.crypto.showAll;
+            renderCryptoOptions();
+            
+            const btn = $("#toggleMoreCryptos");
+            if (btn) {
+                btn.innerHTML = state.crypto.showAll 
+                    ? `<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Réduire`
+                    : `<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Plus de cryptos`;
+            }
+        }
+
+        function renderCryptoOptions() {
+            const cryptos = state.crypto.showAll 
+                ? [...CONFIG.cryptos.primary, ...CONFIG.cryptos.secondary]
+                : CONFIG.cryptos.primary;
+
+            // Strip principale
+            const mainStrip = $("#cryptoStrip");
+            if (mainStrip) {
+                mainStrip.innerHTML = cryptos.map(crypto => `
+                    <button class="chip" aria-pressed="${crypto === state.crypto.selected}"
+                            onclick="state.crypto.selected='${crypto}'; refreshDepot()">
+                        ${crypto}
+                    </button>
+                `).join("");
+            }
+        }
+
+        function renderEwalletOptions() {
+            const ewalletStrip = $("#ewalletStrip");
+            if (!ewalletStrip) return;
+
+            const ewalletHTML = Object.keys(CONFIG.wallets.ewallets).map(key => {
+                const wallet = CONFIG.wallets.ewallets[key];
+                const isActive = key === state.payment.target;
+                return `
+                    <button class="ewbtn" data-key="${key}" aria-pressed="${isActive}"
+                            onclick="state.payment.target='${key}'; refreshDepot()">
+                        ${wallet.logo} ${key.charAt(0).toUpperCase() + key.slice(1)}
+                    </button>
+                `;
+            }).join("");
+
+            ewalletStrip.innerHTML = ewalletHTML;
+        }
+
+        /*** 8. VALIDATION & ENVOI ***/
+        function validateDepotForm() {
+            const amount = $("#dep-amount-ariary")?.value;
+            const address = $("#dep-addr")?.value;
+            const accepted = $("#dep-accept")?.checked;
+            
+            return amount && parseFloat(amount) > 0 && address && accepted;
+        }
+
+        async function submitDepot() {
+            if (!validateDepotForm()) {
+                showToast("Veuillez remplir tous les champs requis et accepter les conditions");
+                return;
+            }
+
+            if (!confirm("Confirmez-vous cette opération de dépôt ?")) return;
+
+            let receivedAmount, receivedType, rateNote;
+            
+            if (state.receptionType === "crypto") {
+                receivedAmount = $("#dep-amount-received").value;
+                receivedType = state.crypto.selected;
+                rateNote = `1 ${state.crypto.selected} = ${CONFIG.cryptos.rates[state.crypto.selected].toLocaleString()} MGA`;
+            } else {
+                receivedAmount = $("#dep-amount-received").value;
+                const selectedWallet = CONFIG.wallets.ewallets[state.payment.target];
+                receivedType = selectedWallet.currency;
+                rateNote = `1 ${selectedWallet.currency} = ${CONFIG.currencyRates[selectedWallet.currency].toLocaleString()} MGA`;
+            }
+
+            const formData = {
+                service: "DÉPÔT",
+                type_reception: state.receptionType,
+                crypto: state.receptionType === "crypto" ? state.crypto.selected : "N/A",
+                wallet: state.receptionType === "wallet" ? state.payment.target : "N/A",
+                montant_ariary: $("#dep-amount-ariary").value,
+                montant_recu: receivedAmount,
+                type_recu: receivedType,
+                moyen_paiement: state.payment.method,
+                adresse_reception: $("#dep-addr").value,
+                taux: rateNote,
+                frais: `${(CONFIG.fees.depot * 100).toFixed(1)}%`,
+                date: new Date().toLocaleString('fr-FR')
+            };
+
+            await sendData(formData);
+        }
+
+        async function sendData(data) {
+            // Mode démo si les clés ne sont pas configurées
+            if (CONFIG.emailjs.publicKey.includes("DEMO")) {
+                console.log("DEMO Submission:", data);
+                showToast("DEMO: Demande enregistrée avec succès. En production, un email serait envoyé.");
+                return;
+            }
+
+            try {
+                await emailjs.send(
+                    CONFIG.emailjs.serviceId,
+                    CONFIG.emailjs.templateId,
+                    data
+                );
+                showToast("Demande envoyée avec succès ! Vous recevrez un email de confirmation.");
+            } catch (error) {
+                console.error("EmailJS Error:", error);
+                showToast("Erreur lors de l'envoi. Veuillez réessayer ou nous contacter directement.");
+            }
+        }
+
+        /*** 9. INITIALISATION ***/
+        function init() {
+            initCommon();
+            setupCryptoSelector();
+            initDepotPage();
+            fetchCryptoRates();
+            
+            // Actualisation périodique des taux
+            setInterval(fetchCryptoRates, 60000); // Toutes les minutes
+        }
+
+        // Lancement de l'application
+        document.addEventListener("DOMContentLoaded", init);
+    </script>
 </body>
 </html>
