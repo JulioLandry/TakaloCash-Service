@@ -3,93 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TakaloCash – Service</title>
+    <title>TakaloCash - Dépôt</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
 </head>
-<body>
+<body data-page="depot">
     <header>
         <div class="topbar">
             <div class="brand">
-                <div class="title">TAKALOCASH</div>
-                <div class="subtitle">Simple – rapide – sécurisé</div>
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <div class="title">TAKALOCASH</div>
+                    <div class="subtitle">Simple – rapide – sécurisé</div>
+                </a>
             </div>
             <div class="flags" aria-label="Language">
-                <!-- FR -->
-                <button class="flag lang-active" id="lang-fr" aria-pressed="true" title="Français">
-                    <svg viewBox="0 0 3 2" width="28" height="18">
-                        <rect width="1" height="2" x="0" y="0" fill="#0055a4"/>
-                        <rect width="1" height="2" x="1" y="0" fill="#fff"/>
-                        <rect width="1" height="2" x="2" y="0" fill="#ef4135"/>
-                    </svg>
-                </button>
-                <!-- MG -->
-                <button class="flag" id="lang-mg" aria-pressed="false" title="Malagasy">
-                    <svg viewBox="0 0 3 2" width="28" height="18">
-                        <rect width="1" height="2" x="0" y="0" fill="#ffffff"/>
-                        <rect width="2" height="1" x="1" y="0" fill="#fc3d32"/>
-                        <rect width="2" height="1" x="1" y="1" fill="#007e3a"/>
-                    </svg>
-                </button>
+                <!-- Flags ici -->
             </div>
         </div>
 
-        <div class="tabs" role="tablist" aria-label="Service">
-            <button class="tab" role="tab" id="tab-depot" aria-selected="true" data-tab="depot">DÉPÔT</button>
-            <button class="tab" role="tab" id="tab-retrait" aria-selected="false" data-tab="retrait">RETRAIT</button>
-            <button class="tab" role="tab" id="tab-transfert" aria-selected="false" data-tab="transfert">TRANSFERT</button>
-        </div>
-        <!-- Favicon -->
-<link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
-<link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
-
-<!-- Manifest PWA -->
-<link rel="manifest" href="manifest.json">
-
-<!-- Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
-<script src="analytics.js"></script>
-
-<!-- Configuration EmailJS séparée -->
-<script src="emailjs-config.js"></script>
+        <nav class="tabs" role="tablist" aria-label="Service">
+            <a href="index.html" class="tab active" role="tab">DÉPÔT</a>
+            <a href="retrait.html" class="tab" role="tab">RETRAIT</a>
+            <a href="transfert.html" class="tab" role="tab">TRANSFERT</a>
+        </nav>
     </header>
 
     <main>
-        <!-- Crypto rates display -->
+        <!-- Contenu spécifique au Dépôt -->
         <div class="panel" id="rates-panel">
             <div class="row" style="justify-content: space-between; flex-wrap: wrap; align-items: center;">
                 <div><b>Cours actuels:</b></div>
                 <div class="crypto-selector" id="crypto-selector">
-                    <div class="crypto-selector-btn" id="crypto-selector-btn">
-                        <span id="current-rate-display">Chargement...</span>
-                        <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
-                    <div class="crypto-dropdown" id="crypto-dropdown"></div>
+                    <!-- Crypto selector -->
                 </div>
             </div>
         </div>
 
-        <!-- STRIPS (top of every tab) -->
         <div class="crypto-strip" id="cryptoStrip"></div>
         <div class="ewallet-strip" id="ewalletStrip"></div>
 
-        <!-- ================== DEPOT ================== -->
-        <section id="panel-depot" class="panel" role="tabpanel" aria-labelledby="tab-depot">
-            <!-- Expanders -->
+        <section class="panel" id="panel-depot">
+            <!-- Formulaire Dépôt -->
             <div class="row">
                 <button class="expand-btn" id="toggleMoreCryptos">
                     <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     Plus de cryptos
                 </button>
-                <button class="expand-btn" id="toggleMoreEwallets">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Plus d'e-wallets
-                </button>
             </div>
 
             <div class="grid" style="margin-top:10px">
-                <!-- ENVOIE (Montant + Paiement) -->
                 <div>
                     <div class="label">Envoie</div>
                     <div class="field">
@@ -110,7 +72,6 @@
                     </div>
                 </div>
 
-                <!-- REÇU (Crypto amount + Adresse preset selon sélection) -->
                 <div>
                     <div class="label">Reçu</div>
                     <div class="field">
@@ -129,7 +90,6 @@
                         </div>
                         <button class="copybtn" id="dep-copy">Copier</button>
                     </div>
-                    <div class="note muted" id="dep-addr-note">Adresse/identifiant présaisie selon le moyen sélectionné (non modifiable).</div>
                 </div>
             </div>
 
@@ -138,178 +98,18 @@
 
             <label class="checkbox">
                 <input id="dep-accept" type="checkbox" />
-                <span class="muted">Je certifie avoir lu et pris connaissance des conditions générales d'utilisation du site internet et les accepter sans réserve.</span>
+                <span class="muted">Je certifie avoir lu et pris connaissance des conditions générales.</span>
             </label>
             <div class="actions">
                 <button id="dep-preview" class="btn btn-primary" disabled>Aperçu</button>
-                <span class="muted" id="dep-msg"></span>
-            </div>
-        </section>
-
-        <!-- ================== RETRAIT ================== -->
-        <section id="panel-retrait" class="panel" role="tabpanel" aria-labelledby="tab-retrait" hidden>
-            <div class="row">
-                <button class="expand-btn" id="toggleMoreCryptos2">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Plus de cryptos
-                </button>
-                <button class="expand-btn" id="toggleMoreEwallets2">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Plus d'e-wallets
-                </button>
-            </div>
-
-            <div class="grid" style="margin-top:10px">
-                <div>
-                    <div class="label">Envoie</div>
-                    <div class="field">
-                        <input id="ret-amount-crypto" type="number" inputmode="decimal" placeholder="0.00000000" />
-                        <span class="suffix" id="ret-crypto-suffix">BTC</span>
-                    </div>
-                    <div class="note">
-                        <div class="row">
-                            <div class="field">
-                                <div class="label">Adresse (nô)</div>
-                                <input id="ret-our-addr" type="text" readonly />
-                            </div>
-                            <button id="ret-copy" class="btn btn-ghost">Copier</button>
-                        </div>
-                        <div class="muted" id="ret-crypto-only">Envoyer seulement en <b>BTC</b></div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="label">Reçu</div>
-                    <div class="field">
-                        <input id="ret-amount-ariary" type="text" placeholder="0 MGA" readonly />
-                        <span class="prefix">MGA</span>
-                        <span class="suffix" id="ret-wallet-logo">Mvola</span>
-                    </div>
-                    <div class="note muted">
-                        <div id="ret-rate-note">1 BTC = … MGA</div>
-                        <div id="ret-fee-note">Frais: 0,5%</div>
-                    </div>
-
-                    <div class="label">Moyen de réception</div>
-                    <div class="field">
-                        <input id="ret-phone" type="tel" placeholder="Numéro (mobile money / e-wallet)" />
-                        <span class="suffix" id="ret-wallet-icon">Mvola</span>
-                    </div>
-                    <div class="note muted" id="ret-wallet-note">Nom dans le compte Mvola</div>
-
-                    <div class="label">Nom du titulaire</div>
-                    <div class="field"><input id="ret-name" type="text" placeholder="Ex: Rakoto" /></div>
-                </div>
-            </div>
-
-            <label class="checkbox">
-                <input id="ret-accept" type="checkbox" />
-                <span class="muted">Je certifie avoir lu et pris connaissance des conditions générales d'utilisation du site internet et les accepter sans réserve.</span>
-            </label>
-            <div class="actions">
-                <button id="ret-preview" class="btn btn-primary" disabled>Aperçu</button>
-                <span class="muted" id="ret-msg"></span>
-            </div>
-        </section>
-
-        <!-- ================== TRANSFERT ================== -->
-        <section id="panel-transfert" class="panel" role="tabpanel" aria-labelledby="tab-transfert" hidden>
-            <div class="row">
-                <button class="expand-btn" id="toggleMoreCryptos3">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Plus de cryptos
-                </button>
-                <button class="expand-btn" id="toggleMoreEwallets3">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Plus d'e-wallets
-                </button>
-            </div>
-
-            <div class="grid" style="margin-top:10px">
-                <div>
-                    <div class="label">Envoie</div>
-                    <div class="field">
-                        <input id="trf-amount-top" type="number" inputmode="decimal" placeholder="0.00000000" />
-                        <span class="suffix" id="trf-top-suffix">BTC</span>
-                    </div>
-                    <div class="note muted" id="trf-top-note">Crypto source: BTC</div>
-                </div>
-
-                <div>
-                    <div class="label">Reçu</div>
-                    <div class="field">
-                        <input id="trf-amount-bot" type="text" placeholder="0.00000000" readonly />
-                        <span class="suffix" id="trf-bot-suffix">USDT</span>
-                    </div>
-                    <div class="note muted" id="trf-rate-note">1 BTC = 35 USDT</div>
-                </div>
-            </div>
-
-            <div class="label" style="margin-top:8px">Choisir la crypto/e-wallet à recevoir</div>
-            <div class="crypto-strip" id="cryptoStripTransfer"></div>
-            <div class="ewallet-strip" id="ewalletStripTransfer"></div>
-
-            <div class="label" style="margin-top:8px">Adresse de réception</div>
-            <div class="field">
-                <input id="trf-dest-addr" type="text" placeholder="Adresse de votre wallet" />
-            </div>
-
-            <label class="checkbox">
-                <input id="trf-accept" type="checkbox" />
-                <span class="muted">Je certifie avoir lu et pris connaissance des conditions générales d'utilisation du site internet et les accepter sans réserve.</span>
-            </label>
-            <div class="actions">
-                <button id="trf-preview" class="btn btn-primary" disabled>Aperçu</button>
-                <span class="muted" id="trf-msg"></span>
             </div>
         </section>
     </main>
 
     <footer>
-        <div class="footer-wrap">
-            <div class="contact-title">Contact</div>
-            <div class="cta">
-                <div class="ctaitem" data-kind="email" id="cta-email" title="Email">
-                    <!-- envelope -->
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2"/></svg>
-                    Email
-                </div>
-                <div class="ctaitem" data-kind="call" id="cta-call" title="Téléphone">
-                    <!-- phone -->
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v2a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 3.9 2 2 0 0 1 4.11 2h2a2 2 0 0 1 2 1.72c.12.9.3 1.78.57 2.63a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.45-1.14a2 2 0 0 1 2.11-.45c.85.27 1.73.45 2.63.57A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="2"/></svg>
-                    Téléphone
-                </div>
-                <div class="ctaitem" data-kind="fb" id="cta-fb" title="Facebook">
-                    <!-- F -->
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-8h3l1-4h-4V7c0-1.1.9-2 2-2h2V1h-3a5 5 0 0 0-5 5v4H6v4h3v8h4z"/></svg>
-                    Facebook
-                </div>
-                <div class="ctaitem" data-kind="wa" id="cta-wa" title="WhatsApp">
-                    <!-- whatsapp -->
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4.9A9.8 9.8 0 0 0 12.2 2C6.9 2 2.6 6.3 2.6 11.6c0 2 .6 3.9 1.8 5.5L3 22l4.9-1.3c1.5.8 3.2 1.2 4.9 1.2 5.3 0 9.6-4.3 9.6-9.6 0-2.6-1-5-2.7-6.8zM12.8 20c-1.5 0-2.9-.4-4.2-1.1l-.3-.2-2.9.8.8-2.8-.2-.3c-1-1.3-1.6-2.9-1.6-4.6C4.4 7.7 8 4.1 12.2 4.1c2.1 0 4.1.8 5.6 2.3 1.5 1.5 2.3 3.5 2.3 5.6 0 4.2-3.6 7.9-7.3 8z"/><path d="M16.6 13.7c-.2-.1-1.3-.7-1.5-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.1-.3.2-.5.1-.2-.1-.9-.3-1.7-1-.6-.6-1-1.2-1.1-1.4-.1-.2 0-.4.1-.5.1-.1.2-.3.3-.5.1-.1.1-.2.2-.4.1-.2 0-.3 0-.4s-.5-1.1-.7-1.5c-.2-.4-.4-.3-.5-.3h-.4c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3.9 2.5c.1.2 1.6 2.6 3.8 3.6.5.2.9.4 1.2.5.5.2 1 .2 1.3.1.4-.1 1.3-.5 1.5-1 .2-.5.2-.9.1-1-.1-.1-.2-.1-.4-.2z"/></svg>
-                    WhatsApp
-                </div>
-            </div>
-
-            <div class="legal">
-                <a data-modal="cgu">Conditions générales d'utilisation</a>
-                <a data-modal="mentions">Mentions légales</a>
-                <a data-modal="privacy">Politique de confidentialité</a>
-            </div>
-
-            <div class="copy">© 2025 TakaloCash. Tous droits réservés.</div>
-        </div>
+        <!-- Footer commun -->
     </footer>
 
-    <!-- LEGAL MODALS -->
-    <dialog id="dlg-cgu"><h3>Conditions générales</h3><p>Exemple de conditions… (soloina amin'ny tena pejy-nao).</p><div style="text-align:right;margin-top:10px"><button onclick="this.closest('dialog').close()">OK</button></div></dialog>
-    <dialog id="dlg-mentions"><h3>Mentions légales</h3><p>Exemple de mentions…</p><div style="text-align:right;margin-top:10px"><button onclick="this.closest('dialog').close()">OK</button></div></dialog>
-    <dialog id="dlg-privacy"><h3>Politique de confidentialité</h3><p>Exemple de politique…</p><div style="text-align:right;margin-top:10px"><button onclick="this.closest('dialog').close()">OK</button></div></dialog>
-
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
-
-    <!-- EmailJS SDK (front-end) -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="script.js"></script>
 </body>
