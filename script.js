@@ -1,6 +1,6 @@
-/* ===== TAKALOCASH - SCRIPT COMPLET POUR PAGES SÉPARÉES ===== */
+/* ===== TAKALOCASH - SCRIPT COMPLET AVEC MODIFICATIONS INTÉGRÉES ===== */
 
-/*** 1. CONFIGURATION ***/
+/*** 1. CONFIGURATION AMÉLIORÉE ***/
 const CONFIG = {
   // EmailJS (à remplacer avec vos vraies clés)
   emailjs: {
@@ -27,10 +27,10 @@ const CONFIG = {
       airtel: { num: "0331483290", name: "Julio R.", logo: "Airtel" }
     },
     ewallets: {
-      wise: { addr: "WISE-ACCOUNT-ID", logo: "$" },
-      paypal: { addr: "paypal@takalocash.mg", logo: "$" },
-      skrill: { addr: "skrill@takalocash.mg", logo: "€" },
-      payoneer: { addr: "PAYONEER-ID", logo: "$" }
+      wise: { addr: "WISE-ACCOUNT-ID", logo: "€", currency: "EUR" },
+      paypal: { addr: "paypal@takalocash.mg", logo: "$", currency: "USD" },
+      skrill: { addr: "skrill@takalocash.mg", logo: "€", currency: "EUR" },
+      payoneer: { addr: "PAYONEER-ID", logo: "$", currency: "USD" }
     }
   },
 
@@ -58,6 +58,12 @@ const CONFIG = {
     }
   },
 
+  // Taux de change pour les devises
+  currencyRates: {
+    EUR: 5000,  // 1 EUR = 5000 MGA
+    USD: 4500   // 1 USD = 4500 MGA
+  },
+
   // Frais
   fees: {
     depot: 0.003,    // 0.3%
@@ -66,7 +72,7 @@ const CONFIG = {
   }
 };
 
-/*** 2. ÉTAT GLOBAL ***/
+/*** 2. ÉTAT GLOBAL AMÉLIORÉ ***/
 const state = {
   lang: "fr",
   currentPage: document.body.getAttribute('data-page') || 'depot',
@@ -77,7 +83,9 @@ const state = {
   payment: {
     method: "mvola",
     target: "USDT"
-  }
+  },
+  // Nouveau: type de réception pour la page dépôt
+  receptionType: "crypto" // 'crypto' ou 'wallet'
 };
 
 /*** 3. FONCTIONS UTILITAIRES ***/
@@ -234,7 +242,7 @@ function updateCryptoDropdown() {
   });
 }
 
-/*** 6. PAGES SPÉCIFIQUES ***/
+/*** 6. PAGES SPÉCIFIQUES - AVEC MODIFICATIONS ***/
 function initPageSpecific() {
   switch(state.currentPage) {
     case 'depot':
@@ -249,9 +257,19 @@ function initPageSpecific() {
   }
 }
 
-// ===== PAGE DÉPÔT =====
+// ===== PAGE DÉPÔT AMÉLIORÉE =====
 function initDepotPage() {
-  // Options de paiement
+  // Type de réception (NOUVEAU)
+  $$("#dep-reception-type .paybtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.receptionType = btn.dataset.type;
+      updateReceptionTypeSelection();
+      refreshDepot();
+      updateAddressField();
+    });
+  });
+
+  // Options de paiement mobile
   $$("#dep-pay-opts .paybtn").forEach(btn => {
     btn.addEventListener("click", () => {
       state.payment.method = btn.dataset.pay;
@@ -262,7 +280,6 @@ function initDepotPage() {
 
   // Événements de saisie
   $("#dep-amount-ariary")?.addEventListener("input", refreshDepot);
-  $("#dep-copy")?.addEventListener("click", () => copyToClipboard($("#dep-addr").value));
   $("#toggleMoreCryptos")?.addEventListener("click", toggleCryptoList);
   
   // Validation
@@ -275,32 +292,75 @@ function initDepotPage() {
   $("#dep-preview")?.addEventListener("click", submitDepot);
 
   // Initialisation
+  updateReceptionTypeSelection();
   updatePaymentDetails();
+  updateAddressField();
   refreshDepot();
 }
 
+// Nouvelle fonction pour mettre à jour la sélection du type de réception
+function updateReceptionTypeSelection() {
+  $$("#dep-reception-type .paybtn").forEach(btn => {
+    btn.setAttribute("aria-pressed", btn.dataset.type === state.receptionType);
+  });
+}
+
+// Nouvelle fonction pour mettre à jour le champ d'adresse selon le type
+function updateAddressField() {
+  const addrLabel = $("#dep-addr-label");
+  const addrInput = $("#dep-addr");
+  const addrNote = $("#dep-addr-note");
+  
+  if (!addrLabel || !addrInput || !addrNote) return;
+  
+  if (state.receptionType === "crypto") {
+    addrLabel.textContent = "Adresse crypto";
+    addrInput.placeholder = "Votre adresse crypto (BTC, ETH, etc.)";
+    addrNote.textContent = "Entrez votre adresse de wallet crypto pour recevoir";
+  } else {
+    addrLabel.textContent = "Adresse e-wallet";
+    addrInput.placeholder = "Votre email ou identifiant e-wallet";
+    addrNote.textContent = "Entrez votre email ou identifiant e-wallet";
+  }
+}
+
+// Dépôt amélioré avec gestion des deux types
 function refreshDepot() {
   const amount = parseFloat($("#dep-amount-ariary")?.value) || 0;
-  const rate = CONFIG.cryptos.rates[state.crypto.selected];
   
-  if (rate && amount > 0) {
-    const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(8);
-    $("#dep-amount-crypto").value = received;
-    $("#dep-crypto-suffix").textContent = state.crypto.selected;
-    $("#dep-rate-note").textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+  if (amount > 0) {
+    if (state.receptionType === "crypto") {
+      // Conversion vers crypto
+      const rate = CONFIG.cryptos.rates[state.crypto.selected];
+      if (rate) {
+        const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(8);
+        $("#dep-amount-received").value = received;
+        $("#dep-received-suffix").textContent = state.crypto.selected;
+        $("#dep-rate-note").textContent = `1 ${state.crypto.selected} = ${rate.toLocaleString()} MGA`;
+      }
+    } else {
+      // Conversion vers devise (e-wallet)
+      const selectedWallet = CONFIG.wallets.ewallets[state.payment.target];
+      if (selectedWallet && CONFIG.currencyRates[selectedWallet.currency]) {
+        const rate = CONFIG.currencyRates[selectedWallet.currency];
+        const received = (amount / rate * (1 - CONFIG.fees.depot)).toFixed(2);
+        $("#dep-amount-received").value = received;
+        $("#dep-received-suffix").textContent = selectedWallet.currency;
+        $("#dep-rate-note").textContent = `1 ${selectedWallet.currency} = ${rate.toLocaleString()} MGA`;
+      }
+    }
+    
     $("#dep-fee-note").textContent = `Frais: ${(CONFIG.fees.depot * 100).toFixed(1)}%`;
+  } else {
+    $("#dep-amount-received").value = "";
   }
-  
-  updatePaymentDetails();
 }
 
 function updatePaymentDetails() {
-  const wallet = CONFIG.wallets.mobile[state.payment.method] || CONFIG.wallets.ewallets[state.payment.method];
+  const wallet = CONFIG.wallets.mobile[state.payment.method];
   if (wallet) {
-    $("#dep-pay-dest").textContent = wallet.num || wallet.addr || "";
+    $("#dep-pay-dest").textContent = wallet.num || "";
     $("#dep-pay-name").textContent = wallet.name || "TakaloCash";
-    $("#dep-pay-logo").textContent = wallet.logo;
-    $("#dep-addr").value = wallet.num || wallet.addr || "";
   }
 }
 
@@ -431,7 +491,7 @@ function updateTransferSelections() {
   });
 }
 
-/*** 7. FONCTIONS DE RENDU ***/
+/*** 7. FONCTIONS DE RENDU AMÉLIORÉES ***/
 function toggleCryptoList() {
   state.crypto.showAll = !state.crypto.showAll;
   renderCryptoOptions();
@@ -481,14 +541,14 @@ function renderEwalletOptions() {
     const isActive = key === state.payment.method || key === state.payment.target;
     return `
       <button class="ewbtn" data-key="${key}" aria-pressed="${isActive}"
-              onclick="state.payment.${state.currentPage === 'depot' ? 'method' : 'target'}='${key}'; refreshCurrentPage()">
+              onclick="state.payment.${state.currentPage === 'depot' ? 'target' : 'target'}='${key}'; refreshCurrentPage()">
         ${wallet.logo} ${key.charAt(0).toUpperCase() + key.slice(1)}
       </button>
     `;
   }).join("");
 
   $$("#ewalletStrip, #ewalletStripTransfer").forEach(strip => {
-    strip.innerHTML = ewalletHTML;
+    if (strip) strip.innerHTML = ewalletHTML;
   });
 }
 
@@ -496,6 +556,12 @@ function refreshCurrentPage() {
   updateRateDisplay();
   renderCryptoOptions();
   renderEwalletOptions();
+  
+  // Mise à jour spécifique à la page dépôt
+  if (state.currentPage === 'depot') {
+    updateReceptionTypeSelection();
+    updateAddressField();
+  }
   
   switch(state.currentPage) {
     case 'depot':
@@ -510,7 +576,7 @@ function refreshCurrentPage() {
   }
 }
 
-/*** 8. VALIDATION & ENVOI ***/
+/*** 8. VALIDATION & ENVOI AMÉLIORÉS ***/
 function validateForm() {
   switch(state.currentPage) {
     case 'depot':
@@ -527,10 +593,9 @@ function validateForm() {
 function validateDepotForm() {
   const amount = $("#dep-amount-ariary")?.value;
   const address = $("#dep-addr")?.value;
-  const holder = $("#dep-holder")?.value;
   const accepted = $("#dep-accept")?.checked;
   
-  return amount && parseFloat(amount) > 0 && address && holder && accepted;
+  return amount && parseFloat(amount) > 0 && address && accepted;
 }
 
 function validateRetraitForm() {
@@ -558,15 +623,30 @@ async function submitDepot() {
 
   if (!confirm("Confirmez-vous cette opération de dépôt ?")) return;
 
+  let receivedAmount, receivedType, rateNote;
+  
+  if (state.receptionType === "crypto") {
+    receivedAmount = $("#dep-amount-received").value;
+    receivedType = state.crypto.selected;
+    rateNote = `1 ${state.crypto.selected} = ${CONFIG.cryptos.rates[state.crypto.selected]?.toLocaleString() || '...'} MGA`;
+  } else {
+    receivedAmount = $("#dep-amount-received").value;
+    const selectedWallet = CONFIG.wallets.ewallets[state.payment.target];
+    receivedType = selectedWallet?.currency || "USD";
+    rateNote = `1 ${receivedType} = ${CONFIG.currencyRates[receivedType]?.toLocaleString() || '...'} MGA`;
+  }
+
   const formData = {
     service: "DÉPÔT",
-    crypto: state.crypto.selected,
+    type_reception: state.receptionType,
+    crypto: state.receptionType === "crypto" ? state.crypto.selected : "N/A",
+    wallet: state.receptionType === "wallet" ? state.payment.target : "N/A",
     montant_ariary: $("#dep-amount-ariary").value,
-    montant_crypto: $("#dep-amount-crypto").value,
+    montant_recu: receivedAmount,
+    type_recu: receivedType,
     moyen_paiement: state.payment.method,
-    adresse_paiement: $("#dep-addr").value,
-    nom_compte: $("#dep-holder").value,
-    taux: `1 ${state.crypto.selected} = ${CONFIG.cryptos.rates[state.crypto.selected].toLocaleString()} MGA`,
+    adresse_reception: $("#dep-addr").value,
+    taux: rateNote,
     frais: `${(CONFIG.fees.depot * 100).toFixed(1)}%`,
     date: new Date().toLocaleString('fr-FR')
   };
@@ -590,7 +670,7 @@ async function submitRetrait() {
     adresse_envoi: $("#ret-our-addr").value,
     telephone: $("#ret-phone").value,
     nom_titulaire: $("#ret-name").value,
-    taux: `1 ${state.crypto.selected} = ${CONFIG.cryptos.rates[state.crypto.selected].toLocaleString()} MGA`,
+    taux: `1 ${state.crypto.selected} = ${CONFIG.cryptos.rates[state.crypto.selected]?.toLocaleString() || '...'} MGA`,
     frais: `${(CONFIG.fees.retrait * 100).toFixed(1)}%`,
     date: new Date().toLocaleString('fr-FR')
   };
@@ -613,7 +693,7 @@ async function submitTransfert() {
     montant_source: $("#trf-amount-top").value,
     montant_cible: $("#trf-amount-bot").value,
     adresse_destination: $("#trf-dest-addr").value,
-    taux: `1 ${state.crypto.selected} = ${$("#trf-rate-note").textContent.split('=')[1]?.trim()}`,
+    taux: `1 ${state.crypto.selected} = ${$("#trf-rate-note")?.textContent?.split('=')[1]?.trim() || '...'}`,
     frais: `${(CONFIG.fees.transfert * 100).toFixed(1)}%`,
     date: new Date().toLocaleString('fr-FR')
   };
